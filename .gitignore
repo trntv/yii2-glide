@@ -1,0 +1,20 @@
+# cache directories
+Thumbs.db
+*.DS_Store
+*.empty
+
+#phpstorm project files
+.idea
+
+# composer
+composer.phar
+composer.lock
+/vendor
+
+# mac deployment helpers
+switch
+index
+
+#phpunit
+phpunit.xml
+phpunit.phar

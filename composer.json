@@ -1,0 +1,22 @@
+{
+    "name": "trntv/yii2-glide",
+    "description": "Yii2 Glide Extension",
+    "type": "yii2-extension",
+    "keywords": ["yii2","extension","glide","thumbnail"],
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Eugene Terentev",
+            "email": "eugene@terentev.net"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "~2.0.0",
+        "league/glide": "~0.3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "trntv\\glide\\": ""
+        }
+    }
+}
