@@ -5,6 +5,7 @@ namespace trntv\glide\actions;
 use Symfony\Component\HttpFoundation\Request;
 use Yii;
 use yii\base\Action;
+use yii\base\NotSupportedException;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
 
@@ -22,6 +23,7 @@ class GlideAction extends Action
      * @param $path
      * @throws BadRequestHttpException
      * @throws NotFoundHttpException
+     * @throws NotSupportedException
      */
     public function run($path)
     {
@@ -34,7 +36,12 @@ class GlideAction extends Action
         if (!$this->validateRequest($request)) {
             throw new BadRequestHttpException;
         };
-        $this->getServer()->outputImage($path, Yii::$app->request->get());
+
+        try {
+            $this->getServer()->outputImage($path, Yii::$app->request->get());
+        } catch (\Exception $e) {
+            throw new NotSupportedException;
+        }
     }
 
     /**

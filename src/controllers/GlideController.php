@@ -2,7 +2,7 @@
 
 namespace trntv\glide\controllers;
 
-use yii\base\Controller;
+use yii\web\Controller;
 
 /**
  * @author Eugene Terentev <eugene@terentev.net>
