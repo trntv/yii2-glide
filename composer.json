@@ -14,9 +14,12 @@
         "yiisoft/yii2": "~2.0.0",
         "league/glide": "~0.3.0"
     },
+    "require-dev": {
+      "phpunit/phpunit": "~4.6"
+    },
     "autoload": {
         "psr-4": {
-            "trntv\\glide\\": ""
+            "trntv\\glide\\": "src/"
         }
     }
 }

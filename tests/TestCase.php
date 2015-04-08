@@ -1,7 +1,9 @@
 <?php
 
-namespace trntv\filekit\tests;
+namespace trntv\glide_tests;
 
+use trntv\glide\actions\GlideAction;
+use yii\base\Controller;
 use yii\di\Container;
 use yii\helpers\ArrayHelper;
 use Yii;
@@ -33,7 +35,13 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
                 'request' => [
                     'cookieValidationKey' => 'MD44rEeFtNSeJ37sOzD954sI',
                     'scriptFile' => __DIR__ .'/index.php',
-                    'scriptUrl' => '/index.php',
+                    'scriptUrl' => '/index.php'
+                ],
+                'glide' => [
+                    'class' => 'trntv\glide\components\Glide',
+                    'sourcePath' => __DIR__ .'/data/source',
+                    'cachePath' => __DIR__ .'/data/cache',
+                    'signKey' => 'test-key'
                 ],
             ]
         ], $config));
@@ -46,5 +54,10 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
     {
         Yii::$app = null;
         Yii::$container = new Container();
+    }
+
+    protected function getGlideAction()
+    {
+        return new GlideAction('index', new Controller('glide', \Yii::$app));
     }
 }

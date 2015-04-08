@@ -3,29 +3,38 @@
 namespace trntv\glide\actions;
 
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Yii;
 use yii\base\Action;
 use yii\web\BadRequestHttpException;
+use yii\web\NotFoundHttpException;
 
 /**
  * @author Eugene Terentev <eugene@terentev.net>
  */
 class GlideAction extends Action
 {
+    /**
+     * @var string
+     */
     public $component = 'glide';
-    public function run()
+
+    /**
+     * @param $path
+     * @throws BadRequestHttpException
+     * @throws NotFoundHttpException
+     */
+    public function run($path)
     {
         $request = Request::createFromGlobals();
 
-        if (!$this->getServer()->sourceFileExists($request)) {
+        if (!$this->getServer()->sourceFileExists($path)) {
             throw new NotFoundHttpException;
         }
 
-        if (!$this->getComponent()->validateRequest($request)) {
+        if (!$this->validateRequest($request)) {
             throw new BadRequestHttpException;
         };
-        $this->getServer()->outputImage($request->get('file'), $request);
+        $this->getServer()->outputImage($path, Yii::$app->request->get());
     }
 
     /**
@@ -41,6 +50,16 @@ class GlideAction extends Action
      */
     protected function getComponent()
     {
-        return Yii::$app->getComponents($this->component);
+        return Yii::$app->get($this->component);
+    }
+
+    /**
+     * @param $request
+     * @return bool
+     */
+    public function validateRequest($request)
+    {
+        $request->query->remove('r');
+        return $this->getComponent()->validateRequest($request);
     }
 }

@@ -19,28 +19,78 @@ use League\Glide\Api\Manipulator\Sharpen;
 use League\Glide\Api\Manipulator\Size;
 use League\Glide\Http\SignatureException;
 use League\Glide\Http\SignatureFactory;
+use League\Glide\Http\UrlBuilder;
 use League\Glide\Http\UrlBuilderFactory;
 use League\Glide\Server;
 use Symfony\Component\HttpFoundation\Request;
 use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
+use yii\helpers\ArrayHelper;
 
 /**
  * @author Eugene Terentev <eugene@terentev.net>
+ * @param $source \League\Flysystem\FilesystemInterface
+ * @param $cache \League\Flysystem\FilesystemInterface
+ * @param $server \League\Glide\Server
+ * @param $httpSignature \League\Glide\Http\Signature
+ * @param $urlBuilder \League\Glide\Http\UrlBuilderFactory
  */
 class Glide extends Component
 {
+    /**
+     * @var string
+     */
     public $sourcePath;
+    /**
+     * @var string
+     */
+    public $sourcePathPrefix;
+    /**
+     * @var string
+     */
     public $cachePath;
+    /**
+     * @var string
+     */
+    public $cachePathPrefix;
+    /**
+     * @var string
+     */
     public $signKey;
+    /**
+     * @var string
+     */
+    public $maxImageSize;
+    /**
+     * @var string
+     */
+    public $baseUrl;
+    /**
+     * @var string
+     */
+    public $urlManager = 'urlManager';
 
-    protected $baseUrl;
+    /**
+     * @var
+     */
     protected $source;
+    /**
+     * @var
+     */
     protected $cache;
+    /**
+     * @var
+     */
     protected $server;
-
-    private $urlBuilder;
+    /**
+     * @var
+     */
+    protected $httpSignature;
+    /**
+     * @var
+     */
+    protected $urlBuilder;
 
     /**
      * @return Server
@@ -70,9 +120,18 @@ class Glide extends Component
         if ($this->baseUrl !== null) {
             $server->setBaseUrl($this->baseUrl);
         }
+        if ($this->sourcePathPrefix !== null) {
+            $server->setSourcePathPrefix($this->sourcePathPrefix);
+        }
+        if ($this->cachePathPrefix !== null) {
+            $server->setCachePathPrefix($this->cachePathPrefix);
+        }
         return $server;
     }
 
+    /**
+     * @return Filesystem
+     */
     public function getSource()
     {
         if (!$this->source && $this->sourcePath) {
@@ -83,6 +142,9 @@ class Glide extends Component
         return $this->source;
     }
 
+    /**
+     * @return Filesystem
+     */
     public function getCache()
     {
         if (!$this->cache && $this->cachePath) {
@@ -93,49 +155,118 @@ class Glide extends Component
         return $this->cache;
     }
 
+    /**
+     * @param FilesystemInterface $source
+     */
     public function setSource(FilesystemInterface $source)
     {
         $this->source = $source;
     }
 
+    /**
+     * @param FilesystemInterface $cache
+     */
     public function setCache(FilesystemInterface $cache)
     {
         $this->cache = $cache;
     }
 
-    public function getBaseUrl()
+    /**
+     * @param UrlBuilder $urlBuider
+     */
+    public function setUrlBuilder(UrlBuilder $urlBuider)
     {
-        return $this->baseUrl;
+        $this->urlBuilder = $urlBuider;
     }
 
-    public function setBaseUrl($baseUrl)
-    {
-        $this->baseUrl = Yii::getAlias($baseUrl);
-    }
-
+    /**
+     * @return UrlBuilder
+     */
     public function getUrlBuilder()
     {
         if (!$this->urlBuilder) {
-            if (!$this->baseUrl) {
-                throw new InvalidConfigException();
-            }
             $this->urlBuilder = UrlBuilderFactory::create($this->baseUrl, $this->signKey);
         }
         return $this->urlBuilder;
     }
 
-    public function getImageUrl($path, $options)
+    /**
+     * @return \League\Glide\Http\Signature
+     * @throws InvalidConfigException
+     */
+    public function getHttpSignature()
     {
-        return $this->getUrlBuilder()->getUrl($path, $options);
+        if ($this->httpSignature === null) {
+            if ($this->signKey === null) {
+                throw new InvalidConfigException;
+            }
+            $this->httpSignature = SignatureFactory::create($this->signKey);
+        }
+        return $this->httpSignature;
+
     }
 
+    /**
+     * @param array $params
+     * @return string
+     * @throws InvalidConfigException
+     */
+    public function createSignedUrl(array $params)
+    {
+        $route = ArrayHelper::getValue($params, 0);
+        if ($this->getUrlManager()->enablePrettyUrl) {
+            $showScriptName = $this->getUrlManager()->showScriptName;
+            if ($showScriptName) {
+                $this->getUrlManager()->showScriptName = false;
+            }
+            $resultUrl = $this->getUrlManager()->createAbsoluteUrl($params);
+            $this->getUrlManager()->showScriptName = $showScriptName;
+            $path = parse_url($resultUrl, PHP_URL_PATH);
+            parse_str(parse_url($resultUrl, PHP_URL_QUERY), $urlParams);
+        } else {
+            $path = '/index.php';
+            unset($params[0]);
+            $urlParams = $params;
+        }
+        $signature = $this->getHttpSignature()->generateSignature($path, $urlParams);
+        $params['s'] = $signature;
+        $params[0] = $route;
+        return $this->getUrlManager()->createUrl($params);
+    }
+
+    /**
+     * @param $path
+     * @param $params
+     */
+    public function signUrl($path, $params)
+    {
+        $this->getUrlBuilder()->getUrl($path, $params);
+    }
+
+    /**
+     * @param Request $request
+     * @return bool
+     * @throws InvalidConfigException
+     */
     public function validateRequest(Request $request)
     {
-        try {
-            SignatureFactory::create($this->signKey)->validateRequest($request);
-        } catch (SignatureException $e) {
-            return false;
+        if ($this->signKey !== null) {
+            $httpSignature = $this->getHttpSignature();
+            try {
+                $httpSignature->validateRequest($request);
+            } catch (SignatureException $e) {
+                return false;
+            }
         }
         return true;
+    }
+
+    /**
+     * @return null|\yii\web\UrlManager
+     * @throws InvalidConfigException
+     */
+    public function getUrlManager()
+    {
+        return Yii::$app->get($this->urlManager);
     }
 }
