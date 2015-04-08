@@ -208,10 +208,11 @@ class Glide extends Component
 
     /**
      * @param array $params
-     * @return string
+     * @param bool $scheme
+     * @return bool|string
      * @throws InvalidConfigException
      */
-    public function createSignedUrl(array $params)
+    public function createSignedUrl(array $params, $scheme = false)
     {
         $route = ArrayHelper::getValue($params, 0);
         if ($this->getUrlManager()->enablePrettyUrl) {
@@ -231,7 +232,9 @@ class Glide extends Component
         $signature = $this->getHttpSignature()->generateSignature($path, $urlParams);
         $params['s'] = $signature;
         $params[0] = $route;
-        return $this->getUrlManager()->createUrl($params);
+        return $scheme
+            ? $this->getUrlManager()->createAbsoluteUrl($params, $scheme)
+            : $this->getUrlManager()->createUrl($params);
     }
 
     /**
