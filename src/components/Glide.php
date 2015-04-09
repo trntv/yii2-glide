@@ -22,6 +22,7 @@ use League\Glide\Http\SignatureFactory;
 use League\Glide\Http\UrlBuilder;
 use League\Glide\Http\UrlBuilderFactory;
 use League\Glide\Server;
+use League\Url\Url;
 use Symfony\Component\HttpFoundation\Request;
 use Yii;
 use yii\base\Component;
@@ -244,10 +245,27 @@ class Glide extends Component
     }
 
     /**
+     * @param $url
+     * @param array $params
+     * @return string
+     * @throws InvalidConfigException
+     */
+    public function signUrl($url, array $params = [])
+    {
+        $url = Url::createFromUrl($url);
+        $path = $url->getPath()->getUriComponent();
+        $query = array_merge($url->getQuery()->toArray(), $params);
+        $signature = $this->getHttpSignature()->generateSignature($path, $query);
+        $query = array_merge($query, ['s' => $signature]);
+        $url->setQuery($query);
+        return (string) $url;
+    }
+
+    /**
      * @param $path
      * @param $params
      */
-    public function signUrl($path, $params)
+    public function signPath($path, array $params = [])
     {
         $this->getUrlBuilder()->getUrl($path, $params);
     }
