@@ -93,9 +93,51 @@ class Glide extends Component
     protected $urlBuilder;
 
     /**
-     * @return Server
+     * @param FilesystemInterface $source
      */
-    public function getServer()
+    public function setSource(FilesystemInterface $source)
+    {
+        $this->source = $source;
+    }
+
+    /**
+     * @return Filesystem
+     */
+    public function getSource()
+    {
+        if (!$this->source && $this->sourcePath) {
+            $this->source = new Filesystem(
+                new Local(Yii::getAlias($this->sourcePath))
+            );
+        }
+        return $this->source;
+    }
+
+    /**
+     * @param FilesystemInterface $cache
+     */
+    public function setCache(FilesystemInterface $cache)
+    {
+        $this->cache = $cache;
+    }
+
+    /**
+     * @return Filesystem
+     */
+    public function getCache()
+    {
+        if (!$this->cache && $this->cachePath) {
+            $this->cache = new Filesystem(
+                new Local(Yii::getAlias($this->cachePath))
+            );
+        }
+        return $this->cache;
+    }
+
+    /**
+     * @return Api
+     */
+    public function getApi()
     {
         $imageManager = new ImageManager([
             'driver' => extension_loaded('imagick') ? 'imagick' : 'gd'
@@ -114,9 +156,15 @@ class Glide extends Component
             new Output()
         ];
 
+        return new Api($imageManager, $manipulators);
+    }
 
-        $api = new Api($imageManager, $manipulators);
-        $server = new Server($this->getSource(), $this->getCache(), $api);
+    /**
+     * @return Server
+     */
+    public function getServer()
+    {
+        $server = new Server($this->getSource(), $this->getCache(), $this->getApi());
         if ($this->baseUrl !== null) {
             $server->setBaseUrl($this->baseUrl);
         }
@@ -127,48 +175,6 @@ class Glide extends Component
             $server->setCachePathPrefix($this->cachePathPrefix);
         }
         return $server;
-    }
-
-    /**
-     * @return Filesystem
-     */
-    public function getSource()
-    {
-        if (!$this->source && $this->sourcePath) {
-           $this->source = new Filesystem(
-               new Local(Yii::getAlias($this->sourcePath))
-           );
-        }
-        return $this->source;
-    }
-
-    /**
-     * @return Filesystem
-     */
-    public function getCache()
-    {
-        if (!$this->cache && $this->cachePath) {
-            $this->cache = new Filesystem(
-                new Local(Yii::getAlias($this->cachePath))
-            );
-        }
-        return $this->cache;
-    }
-
-    /**
-     * @param FilesystemInterface $source
-     */
-    public function setSource(FilesystemInterface $source)
-    {
-        $this->source = $source;
-    }
-
-    /**
-     * @param FilesystemInterface $cache
-     */
-    public function setCache(FilesystemInterface $cache)
-    {
-        $this->cache = $cache;
     }
 
     /**
