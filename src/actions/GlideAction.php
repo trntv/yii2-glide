@@ -27,15 +27,16 @@ class GlideAction extends Action
      */
     public function run($path)
     {
-        $request = Request::createFromGlobals();
-
         if (!$this->getServer()->sourceFileExists($path)) {
             throw new NotFoundHttpException;
         }
 
-        if (!$this->validateRequest($request)) {
-            throw new BadRequestHttpException;
-        };
+        if ($this->getComponent()->signKey) {
+            $request = Request::create(Yii::$app->request->getUrl());
+            if (!$this->validateRequest($request)) {
+                throw new BadRequestHttpException;
+            };
+        }
 
         try {
             $this->getServer()->outputImage($path, Yii::$app->request->get());
@@ -66,7 +67,6 @@ class GlideAction extends Action
      */
     public function validateRequest($request)
     {
-        $request->query->remove('r');
         return $this->getComponent()->validateRequest($request);
     }
 }
