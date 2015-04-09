@@ -60,6 +60,11 @@ public function actions()
 Than use it:
 ``/index.php?r=site/glide?path=new-upload.jpg&w=100&h=75``
 
+Example
+-------
+Complex Glide integration example can be found [here](https://github.com/trntv/yii2-starter-kit/tree/master/storage)
+
+
 Secure Urls
 -----------
 TBD
