@@ -5,6 +5,11 @@ Yii2 Glide integration.
 
 Before you start read [Glide documentation](http://glide.thephpleague.com/) to understand what we are doing
 
+Contibuting
+-----------
+You can contribute anything you found useful in any convenient way. Any help appreciated.
+
+
 Installation
 ------------
 
