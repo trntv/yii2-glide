@@ -46,6 +46,7 @@ Add glide configuration:
         'class' => 'trntv\glide\components\Glide',
         'sourcePath' => '@app/web/uploads',
         'cachePath' => '@runtime/glide',
+        'signKey' => '<random-key>' // "false" if you do not want to use HTTP signatures
     ],
     ...
 ]

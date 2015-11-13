@@ -56,7 +56,8 @@ class Glide extends Component
      */
     public $cachePathPrefix;
     /**
-     * @var string
+     * Sign key. false if you do not want to use HTTP signatures
+     * @var string|bool
      */
     public $signKey;
     /**
@@ -236,8 +237,12 @@ class Glide extends Component
             unset($params[0]);
             $urlParams = $params;
         }
-        $signature = $this->getHttpSignature()->generateSignature($path, $urlParams);
-        $params['s'] = $signature;
+
+        if ($this->signKey != false) {
+            $signature = $this->getHttpSignature()->generateSignature($path, $urlParams);
+            $params['s'] = $signature;
+        }
+
         $params[0] = $route;
         return $scheme
             ? $this->getUrlManager()->createAbsoluteUrl($params, $scheme)
