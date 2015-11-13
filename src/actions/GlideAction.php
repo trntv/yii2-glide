@@ -34,7 +34,7 @@ class GlideAction extends Action
         if ($this->getComponent()->signKey) {
             $request = Request::create(Yii::$app->request->getUrl());
             if (!$this->validateRequest($request)) {
-                throw new BadRequestHttpException;
+                throw new BadRequestHttpException('Wrong signature');
             };
         }
 
