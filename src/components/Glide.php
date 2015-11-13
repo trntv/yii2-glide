@@ -57,7 +57,7 @@ class Glide extends Component
     public $cachePathPrefix;
     /**
      * Sign key. false if you do not want to use HTTP signatures
-     * @var string|bool
+     * @var string|bool|null
      */
     public $signKey;
     /**
@@ -93,6 +93,20 @@ class Glide extends Component
      * @var
      */
     protected $urlBuilder;
+
+    /**
+     * @inheritdoc
+     */
+    public function init()
+    {
+        if (YII_ENV_PROD && !$this->signKey && !$this->maxImageSize) {
+            Yii::warning(
+                'It is highly recommended to use secure url or set "maxImageSize" on production environments',
+                'glide'
+            );
+        }
+        parent::init();
+    }
 
     /**
      * @param FilesystemInterface $source
@@ -248,7 +262,7 @@ class Glide extends Component
             $urlParams = $params;
         }
 
-        if ($this->signKey != false) {
+        if ($this->signKey) {
             $signature = $this->getHttpSignature()->generateSignature($path, $urlParams);
             $params['s'] = $signature;
         }
