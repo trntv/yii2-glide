@@ -215,6 +215,16 @@ class Glide extends Component
     }
 
     /**
+     * @param $path
+     * @param array $params
+     * @return Request
+     */
+    public function outputImage($path, $params = [])
+    {
+        return $this->getServer()->outputImage($path, $params);
+    }
+
+    /**
      * @param array $params
      * @param bool $scheme
      * @return bool|string
