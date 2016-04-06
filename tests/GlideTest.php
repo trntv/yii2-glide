@@ -10,7 +10,7 @@ class GlideTest extends TestCase
 
     public function testCreateSignedUrl()
     {
-        $rigthSignedUrl = '/index.php?r=glide%2Findex&path=test-img&s=7632784193f00c91a6f06dc87c43090f';
+        $rigthSignedUrl = '/index.php?r=glide%2Findex&path=test-img&s=51ef9bf17386a36eb92d1edfacefaac9';
         $signedUrl = $this->getGlide()->createSignedUrl(['glide/index', 'path' => 'test-img']);
         $this->assertEquals($rigthSignedUrl, $signedUrl);
 
@@ -27,7 +27,7 @@ class GlideTest extends TestCase
         $url = 'https://www.google.com.ua/images/srpr/logo11w.png';
         $this->assertEquals(
             $rightSignedUrl,
-            $this->$this->getGlide()->signUrl($url, ['w' => 100])
+            $this->getGlide()->signUrl($url, ['w' => 100])
         );
     }
 

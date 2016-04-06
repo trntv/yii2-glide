@@ -56,7 +56,7 @@ class GlideAction extends Action
     /**
      * @return \trntv\glide\components\Glide;
      */
-    protected function getComponent()
+    public function getComponent()
     {
         return Yii::$app->get($this->component);
     }

@@ -25,8 +25,8 @@ class GlideActionTest extends TestCase
 
     public function testRequestValidationUglyUrl()
     {
-        $rigthSignedUrl = '/index.php?r=glide%2Findex&path=test-img&s=7632784193f00c91a6f06dc87c43090f';
-        $wrongSignedUrl = '/index.php?r=glide%2Findex&path=test-img&w=1000000&s=7632784193f00c91a6f06dc87c43090f';
+        $rigthSignedUrl = '/index.php?r=glide%2Findex&path=test-img&s=51ef9bf17386a36eb92d1edfacefaac9';
+        $wrongSignedUrl = '/index.php?r=glide%2Findex&path=test-img&w=1000000&s=wrong-signature';
         $this->assertEquals(
             true,
             $this->getGlideAction()->validateRequest(Request::create($rigthSignedUrl))

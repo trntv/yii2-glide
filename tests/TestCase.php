@@ -56,6 +56,11 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
         Yii::$container = new Container();
     }
 
+    protected function getGlide()
+    {
+        return Yii::$app->get('glide');
+    }
+
     protected function getGlideAction()
     {
         return new GlideAction('index', new Controller('glide', \Yii::$app));

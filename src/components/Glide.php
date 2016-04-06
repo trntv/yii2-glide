@@ -1,6 +1,7 @@
 <?php
 namespace trntv\glide\components;
 
+use Yii;
 use Intervention\Image\ImageManager;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
@@ -22,9 +23,9 @@ use League\Glide\Http\SignatureFactory;
 use League\Glide\Http\UrlBuilder;
 use League\Glide\Http\UrlBuilderFactory;
 use League\Glide\Server;
-use League\Url\Url;
+use League\Uri\Components\Query;
+use League\Uri\Schemes\Http;
 use Symfony\Component\HttpFoundation\Request;
-use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
@@ -258,8 +259,9 @@ class Glide extends Component
             parse_str(parse_url($resultUrl, PHP_URL_QUERY), $urlParams);
         } else {
             $path = '/index.php';
-            unset($params[0]);
+            $route = array_shift($params);
             $urlParams = $params;
+            $urlParams['r'] = $route;
         }
 
         if ($this->signKey) {
@@ -277,17 +279,20 @@ class Glide extends Component
      * @param $url
      * @param array $params
      * @return string
+     * @throws \RuntimeException
+     * @throws \InvalidArgumentException
      * @throws InvalidConfigException
      */
     public function signUrl($url, array $params = [])
     {
-        $url = Url::createFromUrl($url);
-        $path = $url->getPath()->getUriComponent();
-        $query = array_merge($url->getQuery()->toArray(), $params);
-        $signature = $this->getHttpSignature()->generateSignature($path, $query);
-        $query = array_merge($query, ['s' => $signature]);
-        $url->setQuery($query);
-        return (string) $url;
+        $uri = Http::createFromString($url);
+        $paramsQuery = Query::createFromArray($params);
+        $path = $uri->getPath();
+        $query = $uri->query->merge($paramsQuery);
+        $signature = $this->getHttpSignature()->generateSignature($path, $query->toArray());
+        $query = $query->merge(Query::createFromArray(['s' => $signature]));
+        $uri = $uri->withQuery((string) $query);
+        return (string) $uri;
     }
 
     /**
