@@ -255,8 +255,9 @@ class Glide extends Component
             }
             $resultUrl = $this->getUrlManager()->createAbsoluteUrl($params);
             $this->getUrlManager()->showScriptName = $showScriptName;
-            $path = parse_url($resultUrl, PHP_URL_PATH);
-            parse_str(parse_url($resultUrl, PHP_URL_QUERY), $urlParams);
+            $uri = Http::createFromString($resultUrl);
+            $path = $uri->getPath();
+            $urlParams = $uri->query->toArray();
         } else {
             $path = '/index.php';
             $route = array_shift($params);
