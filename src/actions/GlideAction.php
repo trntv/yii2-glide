@@ -2,12 +2,12 @@
 
 namespace trntv\glide\actions;
 
-use Symfony\Component\HttpFoundation\Request;
 use Yii;
 use yii\base\Action;
 use yii\base\NotSupportedException;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @author Eugene Terentev <eugene@terentev.net>
@@ -62,10 +62,10 @@ class GlideAction extends Action
     }
 
     /**
-     * @param $request
+     * @param Request $request
      * @return bool
      */
-    public function validateRequest($request)
+    public function validateRequest(Request $request)
     {
         return $this->getComponent()->validateRequest($request);
     }

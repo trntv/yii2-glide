@@ -1,27 +1,29 @@
 <?php
 namespace trntv\glide\components;
 
+use League\Glide\Manipulators\Background;
+use League\Glide\Manipulators\Border;
+use League\Glide\Manipulators\Encode;
+use League\Glide\Manipulators\Watermark;
 use Yii;
 use Intervention\Image\ImageManager;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemInterface;
 use League\Glide\Api\Api;
-use League\Glide\Api\Manipulator\Blur;
-use League\Glide\Api\Manipulator\Brightness;
-use League\Glide\Api\Manipulator\Contrast;
-use League\Glide\Api\Manipulator\Filter;
-use League\Glide\Api\Manipulator\Gamma;
-use League\Glide\Api\Manipulator\Orientation;
-use League\Glide\Api\Manipulator\Output;
-use League\Glide\Api\Manipulator\Pixelate;
-use League\Glide\Api\Manipulator\Rectangle;
-use League\Glide\Api\Manipulator\Sharpen;
-use League\Glide\Api\Manipulator\Size;
-use League\Glide\Http\SignatureException;
-use League\Glide\Http\SignatureFactory;
-use League\Glide\Http\UrlBuilder;
-use League\Glide\Http\UrlBuilderFactory;
+use League\Glide\Manipulators\Blur;
+use League\Glide\Manipulators\Brightness;
+use League\Glide\Manipulators\Contrast;
+use League\Glide\Manipulators\Filter;
+use League\Glide\Manipulators\Gamma;
+use League\Glide\Manipulators\Orientation;
+use League\Glide\Manipulators\Pixelate;
+use League\Glide\Manipulators\Sharpen;
+use League\Glide\Manipulators\Size;
+use League\Glide\Signatures\SignatureException;
+use League\Glide\Signatures\SignatureFactory;
+use League\Glide\Urls\UrlBuilder;
+use League\Glide\Urls\UrlBuilderFactory;
 use League\Glide\Server;
 use League\Uri\Components\Query;
 use League\Uri\Schemes\Http;
@@ -35,8 +37,8 @@ use yii\helpers\ArrayHelper;
  * @param $source \League\Flysystem\FilesystemInterface
  * @param $cache \League\Flysystem\FilesystemInterface
  * @param $server \League\Glide\Server
- * @param $httpSignature \League\Glide\Http\Signature
- * @param $urlBuilder \League\Glide\Http\UrlBuilderFactory
+ * @param $httpSignature \League\Glide\Signatures\Signature
+ * @param $urlBuilder \League\Glide\Urls\UrlBuilderFactory
  */
 class Glide extends Component
 {
@@ -162,7 +164,6 @@ class Glide extends Component
         $manipulators = [
             new Size($this->maxImageSize),
             new Orientation(),
-            new Rectangle(),
             new Brightness(),
             new Contrast(),
             new Gamma(),
@@ -170,7 +171,11 @@ class Glide extends Component
             new Filter(),
             new Blur(),
             new Pixelate(),
-            new Output()
+            new Background(),
+            new Border(),
+            new Encode(),
+            new Sharpen(),
+            new Watermark()
         ];
 
         return new Api($imageManager, $manipulators);
@@ -214,7 +219,7 @@ class Glide extends Component
     }
 
     /**
-     * @return \League\Glide\Http\Signature
+     * @return \League\Glide\Signatures\Signature
      * @throws InvalidConfigException
      */
     public function getHttpSignature()
@@ -232,11 +237,10 @@ class Glide extends Component
     /**
      * @param $path
      * @param array $params
-     * @return Request
      */
     public function outputImage($path, $params = [])
     {
-        return $this->getServer()->outputImage($path, $params);
+        $this->getServer()->outputImage($path, $params);
     }
 
     /**
@@ -315,7 +319,7 @@ class Glide extends Component
         if ($this->signKey !== null) {
             $httpSignature = $this->getHttpSignature();
             try {
-                $httpSignature->validateRequest($request);
+                $httpSignature->validateRequest($request->getPathInfo(), $request->query->all());
             } catch (SignatureException $e) {
                 return false;
             }
