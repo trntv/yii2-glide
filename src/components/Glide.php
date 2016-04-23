@@ -5,6 +5,7 @@ use League\Glide\Manipulators\Background;
 use League\Glide\Manipulators\Border;
 use League\Glide\Manipulators\Encode;
 use League\Glide\Manipulators\Watermark;
+use League\Glide\ServerFactory;
 use Yii;
 use Intervention\Image\ImageManager;
 use League\Flysystem\Adapter\Local;
@@ -59,6 +60,14 @@ class Glide extends Component
      */
     public $cachePathPrefix;
     /**
+     * @var string
+     */
+    public $watermarksPath;
+    /**
+     * @var string
+     */
+    public $watermarksPathPrefix;
+    /**
      * Sign key. false if you do not want to use HTTP signatures
      * @var string|bool|null
      */
@@ -84,6 +93,10 @@ class Glide extends Component
      * @var
      */
     protected $cache;
+    /**
+     * @var
+     */
+    protected $watermarks;
     /**
      * @var
      */
@@ -154,10 +167,32 @@ class Glide extends Component
     }
 
     /**
+     * @param FilesystemInterface $watermarks
+     */
+    public function setWatermarks(FilesystemInterface $watermarks)
+    {
+        $this->watermarks = $watermarks;
+    }
+
+    /**
+     * @return Filesystem
+     */
+    public function getWatermarks()
+    {
+        if (!$this->watermarks && $this->watermarksPath) {
+            $this->watermarks = new Filesystem(
+                new Local(Yii::getAlias($this->watermarksPath))
+            );
+        }
+        return $this->watermarks;
+    }
+
+    /**
      * @return Api
      */
     public function getApi()
     {
+
         $imageManager = new ImageManager([
             'driver' => extension_loaded('imagick') ? 'imagick' : 'gd'
         ]);
@@ -173,9 +208,9 @@ class Glide extends Component
             new Pixelate(),
             new Background(),
             new Border(),
-            new Encode(),
             new Sharpen(),
-            new Watermark()
+            new Watermark($this->watermarks,  $this->watermarksPathPrefix),
+            new Encode()
         ];
 
         return new Api($imageManager, $manipulators);
