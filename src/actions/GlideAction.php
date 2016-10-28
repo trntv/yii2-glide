@@ -62,10 +62,10 @@ class GlideAction extends Action
     }
 
     /**
-     * @param $request
+     * @param Request $request
      * @return bool
      */
-    public function validateRequest($request)
+    public function validateRequest(Request $request)
     {
         return $this->getComponent()->validateRequest($request);
     }

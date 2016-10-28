@@ -3,6 +3,7 @@
 namespace trntv\glide_tests;
 
 use trntv\glide\actions\GlideAction;
+use trntv\glide\components\Glide;
 use yii\base\Controller;
 use yii\di\Container;
 use yii\helpers\ArrayHelper;
@@ -56,11 +57,17 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
         Yii::$container = new Container();
     }
 
+    /**
+     * @return Glide
+     */
     protected function getGlide()
     {
         return Yii::$app->get('glide');
     }
 
+    /**
+     * @return GlideAction
+     */
     protected function getGlideAction()
     {
         return new GlideAction('index', new Controller('glide', \Yii::$app));
