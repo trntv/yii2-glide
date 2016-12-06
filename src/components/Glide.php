@@ -7,21 +7,24 @@ use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemInterface;
 use League\Glide\Api\Api;
-use League\Glide\Api\Manipulator\Blur;
-use League\Glide\Api\Manipulator\Brightness;
-use League\Glide\Api\Manipulator\Contrast;
-use League\Glide\Api\Manipulator\Filter;
-use League\Glide\Api\Manipulator\Gamma;
-use League\Glide\Api\Manipulator\Orientation;
-use League\Glide\Api\Manipulator\Output;
-use League\Glide\Api\Manipulator\Pixelate;
-use League\Glide\Api\Manipulator\Rectangle;
-use League\Glide\Api\Manipulator\Sharpen;
-use League\Glide\Api\Manipulator\Size;
-use League\Glide\Http\SignatureException;
-use League\Glide\Http\SignatureFactory;
-use League\Glide\Http\UrlBuilder;
-use League\Glide\Http\UrlBuilderFactory;
+use League\Glide\Manipulators\Blur;
+use League\Glide\Manipulators\Brightness;
+use League\Glide\Manipulators\Contrast;
+use League\Glide\Manipulators\Crop;
+use League\Glide\Manipulators\Filter;
+use League\Glide\Manipulators\Gamma;
+use League\Glide\Manipulators\Orientation;
+use League\Glide\Manipulators\Pixelate;
+use League\Glide\Manipulators\Sharpen;
+use League\Glide\Manipulators\Size;
+use League\Glide\Manipulators\Background;
+use League\Glide\Manipulators\Border;
+use League\Glide\Manipulators\Encode;
+use League\Glide\Manipulators\Watermark;
+use League\Glide\Signatures\SignatureException;
+use League\Glide\Signatures\SignatureFactory;
+use League\Glide\Urls\UrlBuilder;
+use League\Glide\Urls\UrlBuilderFactory;
 use League\Glide\Server;
 use League\Uri\Components\Query;
 use League\Uri\Schemes\Http;
@@ -29,14 +32,15 @@ use Symfony\Component\HttpFoundation\Request;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
+use League\Glide\Responses\ResponseFactoryInterface;
 
 /**
  * @author Eugene Terentev <eugene@terentev.net>
  * @param $source \League\Flysystem\FilesystemInterface
  * @param $cache \League\Flysystem\FilesystemInterface
  * @param $server \League\Glide\Server
- * @param $httpSignature \League\Glide\Http\Signature
- * @param $urlBuilder \League\Glide\Http\UrlBuilderFactory
+ * @param $httpSignature \League\Glide\Signatures\Signature
+ * @param $urlBuilder \League\Glide\Urls\UrlBuilderFactory
  */
 class Glide extends Component
 {
@@ -57,6 +61,14 @@ class Glide extends Component
      */
     public $cachePathPrefix;
     /**
+     * @var string
+     */
+    public $watermarksPath;
+    /**
+     * @var string
+     */
+    public $watermarksPathPrefix;
+    /**
      * Sign key. false if you do not want to use HTTP signatures
      * @var string|bool|null
      */
@@ -73,7 +85,28 @@ class Glide extends Component
      * @var string
      */
     public $urlManager = 'urlManager';
-
+    /**
+     * @var bool
+     */
+    public $groupCacheInFolders = true;
+    /**
+     * @var bool
+     */
+    public $cacheWithFileExtensions = false;
+    /**
+     * @var ResponseFactoryInterface|null
+     */
+    public $responseFactory;
+    /**
+     * Default image manipulations.
+     * @var array
+     */
+    public $defaults = [];
+    /**
+     * Preset image manipulations.
+     * @var array
+     */
+    public $presets = [];
     /**
      * @var
      */
@@ -82,6 +115,10 @@ class Glide extends Component
      * @var
      */
     protected $cache;
+    /**
+     * @var
+     */
+    protected $watermarks;
     /**
      * @var
      */
@@ -110,6 +147,53 @@ class Glide extends Component
     }
 
     /**
+     * @param $path
+     * @param array $params
+     */
+    public function outputImage($path, $params = [])
+    {
+        $this->getServer()->outputImage($path, $params);
+    }
+
+    /**
+     * Get configured server.
+     * @return Server
+     */
+    public function getServer()
+    {
+        if (!$this->server) {
+            $server = new Server(
+                $this->getSource(),
+                $this->getCache(),
+                $this->getApi()
+            );
+
+            $server->setSourcePathPrefix($this->sourcePathPrefix);
+            $server->setCachePathPrefix($this->cachePathPrefix);
+            $server->setGroupCacheInFolders($this->groupCacheInFolders);
+            $server->setCacheWithFileExtensions($this->cacheWithFileExtensions);
+            $server->setDefaults($this->defaults);
+            $server->setPresets($this->presets);
+            $server->setBaseUrl($this->baseUrl);
+            $server->setResponseFactory($this->responseFactory);
+
+            $this->server = $server;
+        }
+
+        return $this->server;
+    }
+
+    /**
+     * Get source file system.
+     * @return FilesystemInterface
+     */
+    public function getSource()
+    {
+        return $this->getFilesystemProperty('source');
+    }
+
+    /**
+     * Set source file system.
      * @param FilesystemInterface $source
      */
     public function setSource(FilesystemInterface $source)
@@ -118,19 +202,33 @@ class Glide extends Component
     }
 
     /**
-     * @return Filesystem
+     * Get file system for property.
+     * @var string $property
+     * @return FilesystemInterface The filesystem object
      */
-    public function getSource()
+    protected function getFilesystemProperty($property)
     {
-        if (!$this->source && $this->sourcePath) {
-            $this->source = new Filesystem(
-                new Local(Yii::getAlias($this->sourcePath))
+        $path = $property . 'Path';
+
+        if (!$this->$property && $this->$path) {
+            $this->$property = new Filesystem(
+                new Local(Yii::getAlias($this->$path))
             );
         }
-        return $this->source;
+        return $this->$property;
     }
 
     /**
+     * Get cache file system.
+     * @return FilesystemInterface
+     */
+    public function getCache()
+    {
+        return $this->getFilesystemProperty('cache');
+    }
+
+    /**
+     * Set cache file system.
      * @param FilesystemInterface $cache
      */
     public function setCache(FilesystemInterface $cache)
@@ -139,19 +237,7 @@ class Glide extends Component
     }
 
     /**
-     * @return Filesystem
-     */
-    public function getCache()
-    {
-        if (!$this->cache && $this->cachePath) {
-            $this->cache = new Filesystem(
-                new Local(Yii::getAlias($this->cachePath))
-            );
-        }
-        return $this->cache;
-    }
-
-    /**
+     * Get image manipulation API.
      * @return Api
      */
     public function getApi()
@@ -162,7 +248,7 @@ class Glide extends Component
         $manipulators = [
             new Size($this->maxImageSize),
             new Orientation(),
-            new Rectangle(),
+            new Crop(),
             new Brightness(),
             new Contrast(),
             new Gamma(),
@@ -170,73 +256,31 @@ class Glide extends Component
             new Filter(),
             new Blur(),
             new Pixelate(),
-            new Output()
+            new Background(),
+            new Border(),
+            new Watermark($this->getWatermarks(), $this->watermarksPathPrefix),
+            new Encode(),
         ];
 
         return new Api($imageManager, $manipulators);
     }
 
     /**
-     * @return Server
+     * Get watermarks file system.
+     * @return FilesystemInterface
      */
-    public function getServer()
+    public function getWatermarks()
     {
-        $server = new Server($this->getSource(), $this->getCache(), $this->getApi());
-        if ($this->baseUrl !== null) {
-            $server->setBaseUrl($this->baseUrl);
-        }
-        if ($this->sourcePathPrefix !== null) {
-            $server->setSourcePathPrefix($this->sourcePathPrefix);
-        }
-        if ($this->cachePathPrefix !== null) {
-            $server->setCachePathPrefix($this->cachePathPrefix);
-        }
-        return $server;
+        return $this->getFilesystemProperty('watermarks');
     }
 
     /**
-     * @param UrlBuilder $urlBuider
+     * Set watermarks file system.
+     * @param FilesystemInterface $watermarks
      */
-    public function setUrlBuilder(UrlBuilder $urlBuider)
+    public function setWatermarks(FilesystemInterface $watermarks)
     {
-        $this->urlBuilder = $urlBuider;
-    }
-
-    /**
-     * @return UrlBuilder
-     */
-    public function getUrlBuilder()
-    {
-        if (!$this->urlBuilder) {
-            $this->urlBuilder = UrlBuilderFactory::create($this->baseUrl, $this->signKey);
-        }
-        return $this->urlBuilder;
-    }
-
-    /**
-     * @return \League\Glide\Http\Signature
-     * @throws InvalidConfigException
-     */
-    public function getHttpSignature()
-    {
-        if ($this->httpSignature === null) {
-            if ($this->signKey === null) {
-                throw new InvalidConfigException;
-            }
-            $this->httpSignature = SignatureFactory::create($this->signKey);
-        }
-        return $this->httpSignature;
-
-    }
-
-    /**
-     * @param $path
-     * @param array $params
-     * @return Request
-     */
-    public function outputImage($path, $params = [])
-    {
-        return $this->getServer()->outputImage($path, $params);
+        $this->watermarks = $watermarks;
     }
 
     /**
@@ -277,6 +321,31 @@ class Glide extends Component
     }
 
     /**
+     * @return null|\yii\web\UrlManager
+     * @throws InvalidConfigException
+     */
+    public function getUrlManager()
+    {
+        return Yii::$app->get($this->urlManager);
+    }
+
+    /**
+     * @return \League\Glide\Signatures\Signature
+     * @throws InvalidConfigException
+     */
+    public function getHttpSignature()
+    {
+        if ($this->httpSignature === null) {
+            if ($this->signKey === null) {
+                throw new InvalidConfigException;
+            }
+            $this->httpSignature = SignatureFactory::create($this->signKey);
+        }
+        return $this->httpSignature;
+
+    }
+
+    /**
      * @param $url
      * @param array $params
      * @return string
@@ -306,6 +375,25 @@ class Glide extends Component
     }
 
     /**
+     * @return UrlBuilder
+     */
+    public function getUrlBuilder()
+    {
+        if (!$this->urlBuilder) {
+            $this->urlBuilder = UrlBuilderFactory::create($this->baseUrl, $this->signKey);
+        }
+        return $this->urlBuilder;
+    }
+
+    /**
+     * @param UrlBuilder $urlBuilder
+     */
+    public function setUrlBuilder(UrlBuilder $urlBuilder)
+    {
+        $this->urlBuilder = $urlBuilder;
+    }
+
+    /**
      * @param Request $request
      * @return bool
      * @throws InvalidConfigException
@@ -315,20 +403,11 @@ class Glide extends Component
         if ($this->signKey !== null) {
             $httpSignature = $this->getHttpSignature();
             try {
-                $httpSignature->validateRequest($request);
+                $httpSignature->validateRequest($request->getPathInfo(), $request->query->all());
             } catch (SignatureException $e) {
                 return false;
             }
         }
         return true;
-    }
-
-    /**
-     * @return null|\yii\web\UrlManager
-     * @throws InvalidConfigException
-     */
-    public function getUrlManager()
-    {
-        return Yii::$app->get($this->urlManager);
     }
 }

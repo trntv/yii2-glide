@@ -10,21 +10,21 @@ class GlideTest extends TestCase
 
     public function testCreateSignedUrl()
     {
-        $rigthSignedUrl = '/index.php?r=glide%2Findex&path=test-img&s=51ef9bf17386a36eb92d1edfacefaac9';
+        $rightSignedUrl = '/index.php?r=glide%2Findex&path=test-img&s=b3a54d71e6c6a61149325ef556d1d55b';
         $signedUrl = $this->getGlide()->createSignedUrl(['glide/index', 'path' => 'test-img']);
-        $this->assertEquals($rigthSignedUrl, $signedUrl);
+        $this->assertEquals($rightSignedUrl, $signedUrl);
 
         \Yii::$app->urlManager->enablePrettyUrl = true;
         \Yii::$app->urlManager->showScriptName = false;
-        $rigthSignedUrl = '/glide/index?path=test-img&s=d60ed7390b035237c96135e76038b7e4';
+        $rightSignedUrl = '/glide/index?path=test-img&s=b9162dbcf5705d7ac929b692f20320b0';
         $signedUrl = $this->getGlide()->createSignedUrl(['glide/index', 'path' => 'test-img']);
-        $this->assertEquals($rigthSignedUrl, $signedUrl);
+        $this->assertEquals($rightSignedUrl, $signedUrl);
     }
 
     public function testSignUrl()
     {
-        $rightSignedUrl = 'https://www.google.com.ua/images/srpr/logo11w.png?w=100&s=a5571ac8f168b556c67cc38cc0aaba87';
         $url = 'https://www.google.com.ua/images/srpr/logo11w.png';
+        $rightSignedUrl = $url . '?w=100&s=d963f7d8b0d14afaa12b1679042ebad4';
         $this->assertEquals(
             $rightSignedUrl,
             $this->getGlide()->signUrl($url, ['w' => 100])
