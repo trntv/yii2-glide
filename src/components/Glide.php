@@ -90,10 +90,6 @@ class Glide extends Component
      */
     public $groupCacheInFolders = true;
     /**
-     * @var bool
-     */
-    public $cacheWithFileExtensions = false;
-    /**
      * @var ResponseFactoryInterface|null
      */
     public $responseFactory;
@@ -171,7 +167,6 @@ class Glide extends Component
             $server->setSourcePathPrefix($this->sourcePathPrefix);
             $server->setCachePathPrefix($this->cachePathPrefix);
             $server->setGroupCacheInFolders($this->groupCacheInFolders);
-            $server->setCacheWithFileExtensions($this->cacheWithFileExtensions);
             $server->setDefaults($this->defaults);
             $server->setPresets($this->presets);
             $server->setBaseUrl($this->baseUrl);

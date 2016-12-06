@@ -9,7 +9,7 @@ Demo
 ----
 Since this package was created as a part of [yii2-starter-kit](https://github.com/trntv/yii2-starter-kit) it's demo can be found in starter kit demo.
 
-Contibuting
+Contributing
 -----------
 You can contribute anything you found useful in any convenient way. Any help appreciated.
 

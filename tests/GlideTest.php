@@ -1,33 +1,47 @@
 <?php
 
 namespace trntv\glide_tests;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @author Eugene Terentev <eugene@terentev.net>
  */
 class GlideTest extends TestCase
 {
-
-    public function testCreateSignedUrl()
+    /**
+     * @retrun void
+     */
+    public function testValidateRequest()
     {
-        $rightSignedUrl = '/index.php?r=glide%2Findex&path=test-img&s=b3a54d71e6c6a61149325ef556d1d55b';
-        $signedUrl = $this->getGlide()->createSignedUrl(['glide/index', 'path' => 'test-img']);
-        $this->assertEquals($rightSignedUrl, $signedUrl);
-
-        \Yii::$app->urlManager->enablePrettyUrl = true;
-        \Yii::$app->urlManager->showScriptName = false;
-        $rightSignedUrl = '/glide/index?path=test-img&s=b9162dbcf5705d7ac929b692f20320b0';
-        $signedUrl = $this->getGlide()->createSignedUrl(['glide/index', 'path' => 'test-img']);
-        $this->assertEquals($rightSignedUrl, $signedUrl);
+        $signedUrl = $this->getGlide()->createSignedUrl(['glide/index', 'path' => 'test-validate-request']);
+        $this->assertEquals(
+            true,
+            $this->getGlide()->validateRequest(Request::create($signedUrl))
+        );
     }
 
+    /**
+     * @retrun void
+     */
+    public function testCreateSignedUrl()
+    {
+        $signedUrl = $this->getGlide()->createSignedUrl(['glide/index', 'path' => 'test-img']);
+        $this->assertEquals(
+            true,
+            $this->getGlide()->validateRequest(Request::create($signedUrl))
+        );
+    }
+
+    /**
+     * @retrun void
+     */
     public function testSignUrl()
     {
         $url = 'https://www.google.com.ua/images/srpr/logo11w.png';
-        $rightSignedUrl = $url . '?w=100&s=d963f7d8b0d14afaa12b1679042ebad4';
+        $signedUrl = $this->getGlide()->signUrl($url, ['w' => 100]);
         $this->assertEquals(
-            $rightSignedUrl,
-            $this->getGlide()->signUrl($url, ['w' => 100])
+            true,
+            $this->getGlide()->validateRequest(Request::create($signedUrl))
         );
     }
 
