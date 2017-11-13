@@ -30,6 +30,8 @@ class GlideAction extends Action
     {
         if (!$this->getServer()->sourceFileExists($path)) {
             throw new NotFoundHttpException;
+        } elseif ($this->getServer()->cacheFileExists($path) && $this->getServer()->getSource()->getTimestamp($path) >= $this->getServer()->getCache()->getTimestamp($path)) {
+            $this->getServer()->deleteCache($path);
         }
 
         if ($this->getComponent()->signKey) {
