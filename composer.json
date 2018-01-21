@@ -24,5 +24,11 @@
         "psr-4": {
             "trntv\\glide\\": "src/"
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    ]
 }

@@ -25,12 +25,16 @@ class GlideAction extends Action
      * @throws BadRequestHttpException
      * @throws NotFoundHttpException
      * @throws NotSupportedException
+     * @throws \League\Flysystem\FileNotFoundException
+     * @throws \yii\base\InvalidConfigException
      */
     public function run($path)
     {
         if (!$this->getServer()->sourceFileExists($path)) {
             throw new NotFoundHttpException;
-        } elseif ($this->getServer()->cacheFileExists($path) && $this->getServer()->getSource()->getTimestamp($path) >= $this->getServer()->getCache()->getTimestamp($path)) {
+        }
+
+        if ($this->getServer()->cacheFileExists($path, []) && $this->getServer()->getSource()->getTimestamp($path) >= $this->getServer()->getCache()->getTimestamp($path)) {
             $this->getServer()->deleteCache($path);
         }
 
@@ -51,6 +55,7 @@ class GlideAction extends Action
 
     /**
      * @return \League\Glide\Server
+     * @throws \yii\base\InvalidConfigException
      */
     protected function getServer()
     {
@@ -59,6 +64,7 @@ class GlideAction extends Action
 
     /**
      * @return \trntv\glide\components\Glide;
+     * @throws \yii\base\InvalidConfigException
      */
     public function getComponent()
     {
@@ -68,6 +74,7 @@ class GlideAction extends Action
     /**
      * @param Request $request
      * @return bool
+     * @throws \yii\base\InvalidConfigException
      */
     public function validateRequest(Request $request)
     {
