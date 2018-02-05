@@ -150,6 +150,20 @@ class Glide extends Component
     {
         $this->getServer()->outputImage($path, $params);
     }
+	
+	
+	 /**
+     * Generate manipulated image.
+     * @param  string                $path   Image path.
+     * @param  array                 $params Image manipulation params.
+     * @return string                Cache path.
+     * @throws FileNotFoundException
+     * @throws FilesystemException
+     */
+    public function makeImage($path, $params = [])
+    {
+       return $this->getServer()->makeImage($path, $params);
+    }
 
     /**
      * Get configured server.
