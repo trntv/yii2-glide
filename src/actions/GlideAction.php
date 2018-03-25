@@ -48,6 +48,7 @@ class GlideAction extends Action
         try {
             Yii::$app->getResponse()->format = Response::FORMAT_RAW;
             $this->getServer()->outputImage($path, Yii::$app->request->get());
+            exit;
         } catch (\Exception $e) {
             throw new NotSupportedException($e->getMessage());
         }
