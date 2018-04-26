@@ -22,13 +22,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist trntv/yii2-glide "*"
+php composer.phar require --prefer-dist trntv/yii2-glide
 ```
 
 or add
 
 ```
-"trntv/yii2-glide": "*"
+"trntv/yii2-glide": "^1.0"
 ```
 
 to the require section of your `composer.json` file.
