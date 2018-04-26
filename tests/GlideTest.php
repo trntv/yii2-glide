@@ -18,6 +18,13 @@ class GlideTest extends TestCase
             true,
             $this->getGlide()->validateRequest(Request::create($signedUrl))
         );
+
+        $url = 'https://www.google.com.ua/images/srpr/logo11w.png';
+        $url = \sprintf('%s?s=test-invalid-signature&w=100', $url);
+        $this->assertEquals(
+            false,
+            $this->getGlide()->validateRequest(Request::create($url))
+        );
     }
 
     /**
