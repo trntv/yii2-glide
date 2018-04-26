@@ -50,8 +50,8 @@ class GlideAction extends Action
         try {
             Yii::$app->getResponse()->format = Response::FORMAT_RAW;
             $path = $server->makeImage($path, Yii::$app->request->get());
-            Yii::$app->response->headers->add('Content-Type', $server->getCache()->getSize($path));
-            Yii::$app->response->headers->add('Content-Length', $server->getCache()->getMimetype($path));
+            Yii::$app->response->headers->add('Content-Type', $server->getCache()->getMimetype($path));
+            Yii::$app->response->headers->add('Content-Length', $server->getCache()->getSize($path));
             Yii::$app->response->headers->add('Cache-Control', 'max-age=31536000, public');
             Yii::$app->response->headers->add('Expires', (new \DateTime('UTC + 1 year'))->format('D, d M Y H:i:s \G\M\T'));
 
