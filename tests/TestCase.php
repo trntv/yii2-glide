@@ -32,6 +32,11 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
             'id' => 'testapp',
             'basePath' => __DIR__,
             'vendorPath' => dirname(__DIR__) . '/vendor',
+            'controllerMap' => [
+                'glide' => [
+                    'class' => 'trntv\glide\controllers\GlideController'
+                ]
+            ],
             'components' => [
                 'request' => [
                     'cookieValidationKey' => 'MD44rEeFtNSeJ37sOzD954sI',
