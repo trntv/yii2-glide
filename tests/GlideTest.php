@@ -35,6 +35,21 @@ class GlideTest extends TestCase
     /**
      * @retrun void
      */
+    public function testCreatePrettySignedUrl()
+    {
+        \Yii::$app->urlManager->enablePrettyUrl = true;
+        \Yii::$app->urlManager->showScriptName = false;
+
+        $signedUrl = $this->getGlide()->createSignedUrl(['glide/index', 'path' => 'test-img']);
+        $this->assertEquals(
+            true,
+            $this->getGlide()->validateRequest(Request::create($signedUrl))
+        );
+    }
+
+    /**
+     * @retrun void
+     */
     public function testSignUrl()
     {
         $url = 'https://www.google.com.ua/images/srpr/logo11w.png';
@@ -44,7 +59,6 @@ class GlideTest extends TestCase
             $this->getGlide()->validateRequest(Request::create($signedUrl))
         );
     }
-
 
     /**
      * @return \trntv\glide\components\Glide;

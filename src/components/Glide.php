@@ -314,7 +314,7 @@ class Glide extends Component
             $this->getUrlManager()->showScriptName = $showScriptName;
             $uri = Http::createFromString($resultUrl);
             $path = $uri->getPath();
-            $urlParams = (array) Query::createFromParams($uri->query);
+            $urlParams = (array) (new QueryParser)->parse($uri->getQuery());
         } else {
             $path = '/index.php';
             $route = array_shift($params);
@@ -369,7 +369,7 @@ class Glide extends Component
     public function signUrl($url, array $params = [])
     {
         $uri = Uri::createFromString($url);
-        $query = \array_merge($params, (new \League\Uri\QueryParser)->parse($uri->getQuery()));
+        $query = \array_merge($params, (new QueryParser)->parse($uri->getQuery()));
         $signature = $this->getHttpSignature()->generateSignature($uri->getPath(), $query);
         $query['s'] = $signature;
         $uri = $uri->withQuery((string) Query::createFromParams($query));
