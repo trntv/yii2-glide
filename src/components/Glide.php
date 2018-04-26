@@ -1,6 +1,9 @@
 <?php
 namespace trntv\glide\components;
 
+use League\Uri\Http;
+use League\Uri\QueryParser;
+use League\Uri\Uri;
 use Yii;
 use Intervention\Image\ImageManager;
 use League\Flysystem\Adapter\Local;
@@ -27,7 +30,6 @@ use League\Glide\Urls\UrlBuilder;
 use League\Glide\Urls\UrlBuilderFactory;
 use League\Glide\Server;
 use League\Uri\Components\Query;
-use League\Uri\Schemes\Http;
 use Symfony\Component\HttpFoundation\Request;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
@@ -150,15 +152,15 @@ class Glide extends Component
     {
         $this->getServer()->outputImage($path, $params);
     }
-	
-	
-	 /**
+
+
+    /**
      * Generate manipulated image.
-     * @param  string                $path   Image path.
-     * @param  array                 $params Image manipulation params.
+     * @param  string $path Image path.
+     * @param  array $params Image manipulation params.
      * @return string                Cache path.
-     * @throws FileNotFoundException
-     * @throws FilesystemException
+     * @throws \League\Glide\Filesystem\FileNotFoundException
+     * @throws \League\Glide\Filesystem\FilesystemException
      */
     public function makeImage($path, $params = [])
     {
@@ -310,7 +312,7 @@ class Glide extends Component
             $this->getUrlManager()->showScriptName = $showScriptName;
             $uri = Http::createFromString($resultUrl);
             $path = $uri->getPath();
-            $urlParams = $uri->query->toArray();
+            $urlParams = (array) Query::createFromParams($uri->query);
         } else {
             $path = '/index.php';
             $route = array_shift($params);
@@ -364,13 +366,11 @@ class Glide extends Component
      */
     public function signUrl($url, array $params = [])
     {
-        $uri = Http::createFromString($url);
-        $paramsQuery = Query::createFromArray($params);
-        $path = $uri->getPath();
-        $query = $uri->query->merge($paramsQuery);
-        $signature = $this->getHttpSignature()->generateSignature($path, $query->toArray());
-        $query = $query->merge(Query::createFromArray(['s' => $signature]));
-        $uri = $uri->withQuery((string) $query);
+        $uri = Uri::createFromString($url);
+        $query = \array_merge($params, (new \League\Uri\QueryParser)->parse($uri->getQuery()));
+        $signature = $this->getHttpSignature()->generateSignature($uri->getPath(), $query);
+        $query['s'] = $signature;
+        $uri = $uri->withQuery((string) Query::createFromParams($query));
         return (string) $uri;
     }
 

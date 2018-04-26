@@ -30,12 +30,14 @@ class GlideAction extends Action
      */
     public function run($path)
     {
-        if (!$this->getServer()->sourceFileExists($path)) {
+        $server = $this->getServer();
+
+        if (!$server->sourceFileExists($path)) {
             throw new NotFoundHttpException;
         }
 
-        if ($this->getServer()->cacheFileExists($path, []) && $this->getServer()->getSource()->getTimestamp($path) >= $this->getServer()->getCache()->getTimestamp($path)) {
-            $this->getServer()->deleteCache($path);
+        if ($server->cacheFileExists($path, []) && $server->getSource()->getTimestamp($path) >= $server->getCache()->getTimestamp($path)) {
+            $server->deleteCache($path);
         }
 
         if ($this->getComponent()->signKey) {
@@ -47,7 +49,14 @@ class GlideAction extends Action
 
         try {
             Yii::$app->getResponse()->format = Response::FORMAT_RAW;
-            $this->getServer()->outputImage($path, Yii::$app->request->get());
+            $path = $server->makeImage($path, Yii::$app->request->get());
+            Yii::$app->response->headers->add('Content-Type', $server->getCache()->getSize($path));
+            Yii::$app->response->headers->add('Content-Length', $server->getCache()->getMimetype($path));
+            Yii::$app->response->headers->add('Cache-Control', 'max-age=31536000, public');
+            Yii::$app->response->headers->add('Expires', (new \DateTime('UTC + 1 year'))->format('D, d M Y H:i:s \G\M\T'));
+
+            Yii::$app->response->stream = $server->getCache()->readStream($path);
+
             Yii::$app->end();
         } catch (\Exception $e) {
             throw new NotSupportedException($e->getMessage());

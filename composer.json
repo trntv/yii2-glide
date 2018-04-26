@@ -14,15 +14,20 @@
         "php" : ">=5.5.9",
         "yiisoft/yii2": "^2.0.0",
         "league/glide": "^1.1",
-        "league/uri": "^4.1",
+        "league/uri": "^5.0",
         "symfony/http-foundation": "^3.0"
     },
     "require-dev": {
-      "phpunit/phpunit": "^4.6"
+      "phpunit/phpunit": "^6.0"
     },
     "autoload": {
         "psr-4": {
             "trntv\\glide\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "trntv\\glide_tests\\": "tests/"
         }
     },
     "repositories": [

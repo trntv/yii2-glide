@@ -22,7 +22,7 @@ class GlideActionTest extends TestCase
     public function testImageNotFound()
     {
         \Yii::$app->glide->signKey = null;
-        $this->setExpectedException('\yii\web\NotFoundHttpException');
+        $this->expectException('\yii\web\NotFoundHttpException');
         $this->getGlideAction()->run('wrong-image.jpg');
     }
 
