@@ -258,9 +258,9 @@ class Glide extends Component
             'driver' => extension_loaded('imagick') ? 'imagick' : 'gd'
         ]);
         $manipulators = [
-            new Size($this->maxImageSize),
             new Orientation(),
             new Crop(),
+            new Size($this->maxImageSize),
             new Brightness(),
             new Contrast(),
             new Gamma(),
